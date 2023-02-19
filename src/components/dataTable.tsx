@@ -15,11 +15,8 @@ import {useEffect, useState} from "react";
 import {teams} from "./team";
 import {Input, InputGroup, Grid, Row} from 'rsuite';
 import SearchIcon from '@rsuite/icons/Search';
-import * as timers from "timers";
-import {ProgressBar} from "./progress-bar";
 import Progress from "rsuite/Progress";
 import AddOutlineIcon from '@rsuite/icons/AddOutline';
-import {DropdownMenu} from "rsuite/Picker";
 
 const {Column, HeaderCell, Cell} = Table;
 
@@ -29,6 +26,7 @@ const CompactHeaderCell = (props: any) => <HeaderCell {...props} style={{padding
 const defaultColumns = [
     {
         key: 'id',
+        label: 'Id',
         fixed: true,
         width: 0,
     },
@@ -111,9 +109,26 @@ export const TableComponent = () => {
     const [limit, setLimit] = useState(10);
     const [paginateSearch, setPaginateSearch] = useState<Ipaginate>({
         search: [],
+        newSearch: {},
         currentPage: 1,
         pageLimit: 10
     });
+
+    const [columnFilter, setColumnFilter] = useState<any[]>([]);
+    const [columnFilterKeys, setColumnFilterKeys] = useState<any[]>([...columnFilter].map(column => column.key));
+
+
+    useEffect(() => {
+        const temp: any[] = [];
+        ([...columnKeys].forEach(data => {
+            if (data === 'id' || data === 'status' || data === 'name' || data === 'timeline') {
+                return;
+            }
+            // @ts-ignore
+            temp.push(defaultColumns.find(clm => clm.key === data));
+        }))
+        setColumnFilter(temp)
+    }, [columnKeys])
 
     const columnsOption = [...defaultColumns].map((team: any) => {
         return {
@@ -135,32 +150,22 @@ export const TableComponent = () => {
     // @ts-ignore
     useEffect(() => {
         let newData: any = []
-        if (!paginateSearch.search.length) {
+        const filteredColumn = Object.keys(paginateSearch.newSearch);
+        if (!filteredColumn.length) {
             newData = [...teams];
         } else {
-            paginateSearch?.search.forEach((search: { label: string | number; value: string; }, index: any) => {
-                [...teams].forEach(team => {
-                    // @ts-ignore
-                    const xx = Object.keys(team).filter(key => {
-                        return !!paginateSearch.search.filter((ke: { label: string; }) => {
-                            return ke.label === key
-                        }).length
-                    });
-
-                    const contains = xx.some(val => {
-                        // @ts-ignore
-                        return team[val]?.toString().toLowerCase().includes(search.value?.toLowerCase())
-                    })
-                    if (contains && !(newData.some((data: any) => data.id === team.id))) {
-                        newData.push(team);
-                    }
-                    // if (team[search.label]?.toLowerCase().includes(search.value?.toLowerCase())) {
-                    //     // @ts-ignore
-                    //     if (!(newData.some(data => data.id === team.id))) {
-                    //         newData.push(team);
-                    //     }
-                    // }
+            [...teams].forEach((row: any) => {
+                let containsValue = false;
+                filteredColumn.forEach((column: string, index: number) => {
+                    let rowValue = (row[column].fullname ? row[column].fullname : row[column]).toString().trim()
+                        .toLowerCase();
+                    let searchedValue = paginateSearch.newSearch[column].toString().trim().toLowerCase();
+                    containsValue = rowValue.includes(searchedValue);
                 })
+
+                if (containsValue && !(newData.some((data: any) => data.id === row.id))) {
+                    newData.push(row);
+                }
             });
         }
         const paginatedData = [...newData].slice((page - 1) * limit, limit * page);
@@ -173,99 +178,77 @@ export const TableComponent = () => {
         setData(newData);
     }, [page, limit])
 
-    const onSearch = (searchName: any) => {
 
-        const newSearch = [...paginateSearch.search];
-
-        if (newSearch.some(val => val.label === 'name')) {
-            newSearch.forEach(data => {
-                if (data.label === 'name') {
-                    data.value = searchName;
-                }
-            })
+    /** Search
+     **/
+    const onSearch = (searchedKeyword: string | [], searchColumn: string) => {
+        const newSearch = {...paginateSearch.newSearch};
+        if (Array.isArray(searchedKeyword) && !searchedKeyword.length) {
+            searchedKeyword = '';
+        }
+        if (!!searchedKeyword) {
+            newSearch[searchColumn] = searchedKeyword.toString();
         } else {
-            newSearch.push({
-                value: searchName,
-                label: 'name',
-            })
+            delete newSearch[searchColumn];
         }
         setPaginateSearch({
             ...paginateSearch,
-            search: newSearch,
+            newSearch: newSearch,
         });
     }
 
-    const populateSearchStatus = (values: any[]) => {
-        const paginateObj = [...paginateSearch.search];
-        [...paginateObj]?.forEach((criteria, i) => {
-            if (criteria.label === 'status') {
-                paginateObj.splice(i, 1);
-            }
-        });
-
-        console.log([...paginateObj].length, 'obj', values.length)
-
-        values.forEach(val => {
-            paginateObj.push({
-                label: 'status',
-                value: val
-            })
-        })
-
-        // @ts-ignore
+    const onCLoseFilter = (column: string) => {
+        const searchObject = {...paginateSearch.newSearch}
+        delete searchObject[column];
         setPaginateSearch({
-            pageLimit: paginateSearch?.pageLimit,
-            currentPage: paginateSearch?.currentPage,
-            search: paginateObj
+            ...paginateSearch,
+            newSearch: searchObject
         })
-    }
-
-    const [dropdownMenuOptions, setDropdownSearch] = useState([...columnsOption]);
+    };
 
     const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
 
-        const onInputChange = (searchName: string) => {
-            let newData: any[] = [];
-            if (searchName) {
-                columnsOption.forEach(option => {
-                    if (option.value.toLowerCase().includes(searchName.toLowerCase())) {
-                        newData.push(option);
-                    }
-                })
-                setDropdownSearch(newData);
-            } else {
-                setDropdownSearch([...columnsOption]);
-            }
-
-        }
-        // @ts-ignore
-        // eslint-disable-next-line react/jsx-no-undef
-        return (<>
-                {/* eslint-disable-next-line react/jsx-no-undef */}
-                <Popover ref={ref} className={className} style={{left, top}} full>
-                    {/*<Input onChange={onInputChange}></Input>*/}
-                    {/*<Dropdown.Menu>*/}
-                    {/*    {dropdownMenuOptions.map((data, key) => {*/}
-
-                    {/*        return (*/}
-                    {/*            <Dropdown.Item eventKey={data.value}>{data.label}</Dropdown.Item>*/}
-                    {/*        )*/}
-                    {/*    })}*/}
-                    {/*</Dropdown.Menu>*/}
-
-                    <SelectPicker
-                        data={dropdownMenuOptions}
+        const addColumnFilter = (data: any) => {
+            setColumnFilterKeys(data);
+        };
+        return (
+            <Popover ref={ref} className={className}>
+                <div>
+                    <TagPicker
+                        data={columnFilter}
                         labelKey="label"
+                        open={true}
                         valueKey="key"
-                        value={columnKeys}
-                        cleanable={false}
+                        value={columnFilterKeys}
+                        onChange={addColumnFilter}
+                        onClean={() => {
+                            // onCLoseFilter('status')
+                        }
+                        }
+                        cleanable={true}
+                        style={{width: 240}}
+                        menuStyle={{width: 240}}
                     />
-
-                </Popover>
-            </>
+                </div>
+            </Popover>
         )
     }
-    // @ts-ignore
+
+
+    const getDynamicSearchDataForColumnFilters: any = (key: 'string', page: any) => {
+        const searchData: any[] = [];
+        [...teams].forEach((row: any) => {
+            if (!searchData.some(val => val.value === row[key]?.fullname || val.value === row[key])) {
+                searchData.push({
+                    label: row[key]?.fullname || row[key],
+                    value: row[key]?.fullname || row[key],
+                })
+            }
+        })
+        return searchData;
+    }
+
+
     // @ts-ignore
     return (
         <div style={{
@@ -277,40 +260,87 @@ export const TableComponent = () => {
             alignItems: 'center'
         }}>
             <div style={{width: '85%'}}>
-                <div style={{width: '100%'}}>
+
+                {/*1st dynamic column section*/}
+                <div style={{padding: '10px'}}>
+                    <TagPicker
+                        data={defaultColumns}
+                        labelKey="label"
+                        valueKey="key"
+                        value={columnKeys}
+                        onChange={setColumnKeys}
+                        cleanable={false}
+                    />
+                </div>
+
+                {/*2nd section*/}
+                <div style={{padding: '10'}}>
                     {/* eslint-disable-next-line react/jsx-no-undef */}
                     <FlexboxGrid justify="end">
                         <FlexboxGrid.Item colspan={6}>
                             <CustomInputGroup
                                 size="12"
                                 placeholder="Search By Name"
-                                onInputChange={onSearch}/>
+                                onInputChange={(searchedValue: string) => {
+                                    onSearch(searchedValue, 'name')
+                                }
+                                }/>
                         </FlexboxGrid.Item>
 
                         <FlexboxGrid.Item colspan={6}>
                             <TagPicker data={teamStatusOption}
                                        style={{width: 300}}
-                                       onChange={populateSearchStatus}
+                                       onChange={(searchKeyword) => {
+                                           onSearch(searchKeyword, 'status')
+                                       }}
+                                       onClean={() => {
+                                           onCLoseFilter('status')
+                                       }
+                                       }
                             />
+                        </FlexboxGrid.Item>
+
+                        <FlexboxGrid.Item colspan={6}>
+                            <ButtonGroup>
+                                <Whisper placement={"autoVerticalStart"} trigger="click" speaker={renderMenu}>
+                                    <div>
+                                        <Button>Add</Button>
+                                        <IconButton icon={<AddOutlineIcon/>}/>
+                                    </div>
+                                </Whisper>
+                            </ButtonGroup>
                         </FlexboxGrid.Item>
                         <FlexboxGrid.Item colspan={3}> <IconButton icon={<AddOutlineIcon/>}>Add</IconButton>
                         </FlexboxGrid.Item>
-                        <FlexboxGrid.Item colspan={4}>
-                            <div>
-                                {/* eslint-disable-next-line react/jsx-no-undef */}
-                                <ButtonGroup>
-                                    <Button>Create</Button>
-                                    {/* eslint-disable-next-line react/jsx-no-undef */}
-                                    {/*<Whisper placement="bottomStart" trigger="click" speaker={renderMenu}>*/}
-                                    {/*    /!* eslint-disable-next-line react/jsx-no-undef *!/*/}
-                                    {/*    <IconButton icon={<AddOutlineIcon/>}/>*/}
-                                    {/*</Whisper>*/}
-                                </ButtonGroup>
-                            </div>
+                    </FlexboxGrid>
+                    <FlexboxGrid>
+                        <FlexboxGrid.Item>
+                            {[...columnFilterKeys].map((column, key) => {
+
+                                // @ts-ignore
+                                // @ts-ignore
+                                return (
+                                    <SelectPicker
+                                        id={column}
+                                        style={{width: 224, padding: '16px'}}
+                                        placeholder={columns.find(col => col.key === column)?.label}
+                                        onSelect={(searchKeyword) => {
+                                            onSearch(searchKeyword, column)
+                                        }}
+                                        onClean={() => {
+                                            onCLoseFilter(column);
+                                        }
+                                        }
+                                        data={getDynamicSearchDataForColumnFilters(column)}
+                                        virtualized
+                                    />
+                                )
+                            })}
                         </FlexboxGrid.Item>
                     </FlexboxGrid>
                 </div>
 
+                {/*table section*/}
                 <div style={{padding: '10px'}}>
                     <Table
                         loading={loading}
@@ -352,7 +382,7 @@ export const TableComponent = () => {
                                                 return <span><img alt="avatar"
                                                                   style={{width: 30, height: 30}}
                                                                   src="https://images.vyaguta.lftechnology.com/projects/logo/48/224.png"/>
-                                    <span style={{paddingLeft:'8px'}}>{rowData[key]} </span>
+                                    <span style={{paddingLeft: '8px'}}>{rowData[key]} </span>
                                     </span>
                                             } else if (key === 'projectLeader' ||
                                                 key === 'accountManager' || key === 'relationshipManager') {
@@ -405,7 +435,9 @@ export interface Ipaginate {
     currentPage: number,
     pageLimit
         :
-        number
+        number,
+    newSearch: { [key: string]: string },
+
     search: [{
         value?: string | number,
         label?: string
