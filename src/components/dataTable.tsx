@@ -21,7 +21,6 @@ const {Column, HeaderCell, Cell} = Table;
 const CompactHeaderCell = (props: any) => <HeaderCell {...props} style={{padding: 4}}/>;
 
 
-
 // @ts-ignore
 const CustomInputGroup = ({placeholder, ...props}) => (
     <InputGroup {...props} >
@@ -39,8 +38,6 @@ export const TableComponent = () => {
     const [data, setData] = useState<any>([]);
     const columns = defaultColumns.filter(column => activeColumns.some(key => key === column.key));
     const CustomHeaderCell = compact ? CompactHeaderCell : HeaderCell;
-    const [page, setPage] = useState(1);
-    const [limit, setLimit] = useState(10);
     const [paginateSearch, setPaginateSearch] = useState<Ipaginate>({
         search: {},
         currentPage: 1,
@@ -87,19 +84,19 @@ export const TableComponent = () => {
             newData = [...teams];
         } else {
             [...teams].forEach((row: any) => {
-                let containsValue = false;
-                filteredColumn.forEach((column: string, index: number) => {
+
+                const containsValue = filteredColumn.every((column: string, index: number) => {
                     let rowValue = (row[column].fullname ? row[column].fullname : row[column]).toString().trim()
                         .toLowerCase();
                     let searchedValue = paginateSearch.search[column].toString().trim().toLowerCase();
-                    containsValue = rowValue.includes(searchedValue);
+                    return rowValue.includes(searchedValue);
                 })
-
-                if (containsValue && !(newData.some((data: any) => data.id === row.id))) {
+                if (containsValue) {
                     newData.push(row);
                 }
             });
         }
+
         const paginatedData = [...newData].slice((paginateSearch.currentPage - 1) * paginateSearch.pageLimit, paginateSearch.pageLimit * paginateSearch.currentPage);
         if (newData.length) {
             setNoData(false)
