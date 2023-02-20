@@ -6,7 +6,7 @@ import {
     IconButton,
     ButtonGroup,
     Whisper,
-    SelectPicker, Popover, Dropdown, FlexboxGrid
+    SelectPicker, Popover, Dropdown, FlexboxGrid, CheckPicker
 } from 'rsuite';
 import {useEffect, useState} from "react";
 import {teams} from "./team";
@@ -183,21 +183,26 @@ export const TableComponent = () => {
             <div style={{width: '85%'}}>
 
                 {/*1st dynamic column section*/}
-                <div style={{padding: '10px'}}>
-                    <TagPicker
-                        data={defaultColumns}
-                        labelKey="label"
-                        valueKey="key"
-                        value={activeColumns}
-                        onClean={() => {
-                            // [Object.keys(paginateSearch.search)].forEach((column) => {
-                            //     onCLoseFilter(column);
-                            // })
-                        }}
-                        onChange={setActiveColumns}
-                        cleanable={false}
-                    />
-                </div>
+                <FlexboxGrid style={{padding: '10px',}} justify={"space-between"}>
+                    <FlexboxGridItem colspan={6}>
+                        Projects
+                    </FlexboxGridItem>
+                    <FlexboxGridItem colspan={6}>
+                        <CheckPicker
+                            data={defaultColumns}
+                            labelKey="label"
+                            valueKey="key"
+                            value={activeColumns}
+                            onClean={() => {
+                                // [Object.keys(paginateSearch.search)].forEach((column) => {
+                                //     onCLoseFilter(column);
+                                // })
+                            }}
+                            onChange={setActiveColumns}
+                            cleanable={false}
+                        />
+                    </FlexboxGridItem>
+                </FlexboxGrid>
 
                 {/*2nd section*/}
                 <div style={{padding: '10'}}>
@@ -227,7 +232,7 @@ export const TableComponent = () => {
                             />
                         </FlexboxGrid.Item>
                         <FlexboxGridItem>
-                            <TagPicker
+                            <CheckPicker
                                 data={columnFilter}
                                 labelKey="label"
                                 valueKey="key"
