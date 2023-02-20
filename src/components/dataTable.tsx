@@ -43,6 +43,14 @@ export const TableComponent = () => {
         currentPage: 1,
         pageLimit: 10
     });
+    const teamStatusOption: any[] = [{
+        value: 'In Progress',
+        label: 'In Progress',
+    }, {
+        value: 'Lead',
+        label: 'Lead',
+    }
+    ]
 
     const [columnFilter, setColumnFilter] = useState<any[]>([]);
     const [activeFilteredColumns, setActiveFilteredColumns] = useState<any[]>([]);
@@ -64,17 +72,6 @@ export const TableComponent = () => {
         }))
         setColumnFilter(temp);
     }, [activeColumns])
-
-
-    const teamStatusOption: any[] = [];
-    [...teams].forEach((team: any) => {
-        if (!teamStatusOption.filter(opt => opt.value === team.status).length) {
-            teamStatusOption.push({
-                value: team.status,
-                label: team.status,
-            })
-        }
-    })
 
     // @ts-ignore
     useEffect(() => {
@@ -213,6 +210,7 @@ export const TableComponent = () => {
 
                         <FlexboxGrid.Item colspan={6}>
                             <TagPicker data={teamStatusOption}
+                                       placeholder='Status'
                                        style={{width: 300}}
                                        onChange={(searchKeyword) => {
                                            onSearch(searchKeyword, 'status')
