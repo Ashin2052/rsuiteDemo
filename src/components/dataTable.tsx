@@ -58,7 +58,7 @@ export const TableComponent = () => {
 
     useEffect(() => {
         const temp: any[] = [];
-        ([...activeColumns].forEach(data => {
+        (activeColumns.forEach(data => {
             if (data === 'id' || data === 'status' || data === 'name' || data === 'timeline') {
                 return;
             }
@@ -189,6 +189,11 @@ export const TableComponent = () => {
                         labelKey="label"
                         valueKey="key"
                         value={activeColumns}
+                        onClean={() => {
+                            // [Object.keys(paginateSearch.search)].forEach((column) => {
+                            //     onCLoseFilter(column);
+                            // })
+                        }}
                         onChange={setActiveColumns}
                         cleanable={false}
                     />
@@ -210,7 +215,7 @@ export const TableComponent = () => {
 
                         <FlexboxGrid.Item colspan={6}>
                             <TagPicker data={teamStatusOption}
-                                       placeholder='Status'
+                                       placeholder="Status"
                                        style={{width: 300}}
                                        onChange={(searchKeyword) => {
                                            onSearch(searchKeyword, 'status')
