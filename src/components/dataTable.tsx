@@ -1,11 +1,8 @@
 import {
     Table,
-    Toggle,
     TagPicker,
     Button,
-    ColumnProps,
     Pagination,
-    Col,
     IconButton,
     ButtonGroup,
     Whisper,
@@ -16,76 +13,14 @@ import {teams} from "./team";
 import {Input, InputGroup, Grid, Row} from 'rsuite';
 import SearchIcon from '@rsuite/icons/Search';
 import Progress from "rsuite/Progress";
-import AddOutlineIcon from '@rsuite/icons/AddOutline';
+import FlexboxGridItem from "rsuite/cjs/FlexboxGrid/FlexboxGridItem";
+import {defaultColumns} from "./column";
 
 const {Column, HeaderCell, Cell} = Table;
 
-const CompactCell = (props: any) => <Cell {...props} style={{padding: 4}}/>;
 const CompactHeaderCell = (props: any) => <HeaderCell {...props} style={{padding: 4}}/>;
 
-const defaultColumns = [
-    {
-        key: 'id',
-        label: 'Id',
-        fixed: true,
-        width: 0,
-    },
-    {
-        key: 'name',
-        label: 'Team Name',
-        fixed: true,
-        width: 250,
-        // flexGrow: 1,
-    },
-    {
-        key: 'status',
-        label: 'Status',
-        fixed: true,
-        width: 250,
-        // flexGrow: 1,
-    },
-    {
-        key: 'timeline',
-        label: 'Project timeline',
-        minWidth: 600,
-        width: 600,
-        flexGrow: 1
-    },
-    {
-        key: 'projectLeader',
-        label: 'Project Leader',
-        width: 100,
-        // flexGrow: 1
 
-
-    },
-    {
-        key: 'category',
-        label: 'Category',
-        width: 175,
-        // flexGrow: 1,
-
-    },
-    {
-        key: 'accountManager',
-        label: 'Account Manager',
-        width: 100,
-        // flexGrow: 1
-
-
-    },
-    {
-        key: 'relationshipManager',
-        label: 'Relationship Manager',
-        width: 100,
-        // flexGrow: 1
-
-    }
-];
-
-const styles = {
-    marginBottom: 10
-};
 
 // @ts-ignore
 const CustomInputGroup = ({placeholder, ...props}) => (
@@ -100,42 +35,39 @@ export const TableComponent = () => {
     const [loading, setLoading] = useState(false);
     const [compact, setCompact] = useState(true);
     const [noData, setNoData] = useState(false);
-    const [autoHeight, setAutoHeight] = useState(true);
-    const [columnKeys, setColumnKeys] = useState(defaultColumns.map(column => column.key));
+    const [activeColumns, setActiveColumns] = useState(defaultColumns.map(column => column.key));
     const [data, setData] = useState<any>([]);
-    const columns = defaultColumns.filter(column => columnKeys.some(key => key === column.key));
+    const columns = defaultColumns.filter(column => activeColumns.some(key => key === column.key));
     const CustomHeaderCell = compact ? CompactHeaderCell : HeaderCell;
     const [page, setPage] = useState(1);
     const [limit, setLimit] = useState(10);
     const [paginateSearch, setPaginateSearch] = useState<Ipaginate>({
-        search: [],
-        newSearch: {},
+        search: {},
         currentPage: 1,
         pageLimit: 10
     });
 
     const [columnFilter, setColumnFilter] = useState<any[]>([]);
-    const [columnFilterKeys, setColumnFilterKeys] = useState<any[]>([...columnFilter].map(column => column.key));
+    const [activeFilteredColumns, setActiveFilteredColumns] = useState<any[]>([]);
 
 
     useEffect(() => {
         const temp: any[] = [];
-        ([...columnKeys].forEach(data => {
+        ([...activeColumns].forEach(data => {
             if (data === 'id' || data === 'status' || data === 'name' || data === 'timeline') {
                 return;
             }
-            // @ts-ignore
-            temp.push(defaultColumns.find(clm => clm.key === data));
+            let column = defaultColumns.find(clm => clm.key === data);
+            if (column) {
+                temp.push({
+                    ...column,
+                    value: column.key
+                });
+            }
         }))
-        setColumnFilter(temp)
-    }, [columnKeys])
+        setColumnFilter(temp);
+    }, [activeColumns])
 
-    const columnsOption = [...defaultColumns].map((team: any) => {
-        return {
-            value: team.key,
-            label: team.label,
-        }
-    })
 
     const teamStatusOption: any[] = [];
     [...teams].forEach((team: any) => {
@@ -150,7 +82,7 @@ export const TableComponent = () => {
     // @ts-ignore
     useEffect(() => {
         let newData: any = []
-        const filteredColumn = Object.keys(paginateSearch.newSearch);
+        const filteredColumn = Object.keys(paginateSearch.search);
         if (!filteredColumn.length) {
             newData = [...teams];
         } else {
@@ -159,7 +91,7 @@ export const TableComponent = () => {
                 filteredColumn.forEach((column: string, index: number) => {
                     let rowValue = (row[column].fullname ? row[column].fullname : row[column]).toString().trim()
                         .toLowerCase();
-                    let searchedValue = paginateSearch.newSearch[column].toString().trim().toLowerCase();
+                    let searchedValue = paginateSearch.search[column].toString().trim().toLowerCase();
                     containsValue = rowValue.includes(searchedValue);
                 })
 
@@ -168,21 +100,20 @@ export const TableComponent = () => {
                 }
             });
         }
-        const paginatedData = [...newData].slice((page - 1) * limit, limit * page);
+        const paginatedData = [...newData].slice((paginateSearch.currentPage - 1) * paginateSearch.pageLimit, paginateSearch.pageLimit * paginateSearch.currentPage);
+        if (newData.length) {
+            setNoData(false)
+        } else {
+            setNoData(true)
+        }
         setData(paginatedData);
     }, [paginateSearch]);
-
-    useEffect(() => {
-        const newData = [...teams].slice((page - 1) * limit, limit * page);
-        // @ts-ignore
-        setData(newData);
-    }, [page, limit])
 
 
     /** Search
      **/
     const onSearch = (searchedKeyword: string | [], searchColumn: string) => {
-        const newSearch = {...paginateSearch.newSearch};
+        const newSearch = {...paginateSearch.search};
         if (Array.isArray(searchedKeyword) && !searchedKeyword.length) {
             searchedKeyword = '';
         }
@@ -193,23 +124,26 @@ export const TableComponent = () => {
         }
         setPaginateSearch({
             ...paginateSearch,
-            newSearch: newSearch,
+            search: newSearch,
         });
     }
 
     const onCLoseFilter = (column: string) => {
-        const searchObject = {...paginateSearch.newSearch}
+        const searchObject = {...paginateSearch.search}
         delete searchObject[column];
         setPaginateSearch({
             ...paginateSearch,
-            newSearch: searchObject
+            search: searchObject
         })
     };
 
-    const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
+    const addColumnFilter = (data: any) => {
+        setActiveFilteredColumns(data);
+    };
 
+    const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
         const addColumnFilter = (data: any) => {
-            setColumnFilterKeys(data);
+            setActiveFilteredColumns(data);
         };
         return (
             <Popover ref={ref} className={className}>
@@ -219,12 +153,7 @@ export const TableComponent = () => {
                         labelKey="label"
                         open={true}
                         valueKey="key"
-                        value={columnFilterKeys}
                         onChange={addColumnFilter}
-                        onClean={() => {
-                            // onCLoseFilter('status')
-                        }
-                        }
                         cleanable={true}
                         style={{width: 240}}
                         menuStyle={{width: 240}}
@@ -233,7 +162,6 @@ export const TableComponent = () => {
             </Popover>
         )
     }
-
 
     const getDynamicSearchDataForColumnFilters: any = (key: 'string', page: any) => {
         const searchData: any[] = [];
@@ -247,7 +175,6 @@ export const TableComponent = () => {
         })
         return searchData;
     }
-
 
     // @ts-ignore
     return (
@@ -267,8 +194,8 @@ export const TableComponent = () => {
                         data={defaultColumns}
                         labelKey="label"
                         valueKey="key"
-                        value={columnKeys}
-                        onChange={setColumnKeys}
+                        value={activeColumns}
+                        onChange={setActiveColumns}
                         cleanable={false}
                     />
                 </div>
@@ -299,23 +226,38 @@ export const TableComponent = () => {
                                        }
                             />
                         </FlexboxGrid.Item>
+                        <FlexboxGridItem>
+                            <TagPicker
+                                data={columnFilter}
+                                labelKey="label"
+                                valueKey="key"
+                                placeholder={'Column Filter'}
+                                onChange={addColumnFilter}
+                                onClean={() => {
+                                    activeFilteredColumns.forEach((column: string) => {
+                                        onCLoseFilter(column);
+                                    })
+                                }
+                                }
+                                cleanable={true}
+                                style={{width: 350}}
+                            />
+                        </FlexboxGridItem>
 
-                        <FlexboxGrid.Item colspan={6}>
-                            <ButtonGroup>
-                                <Whisper placement={"autoVerticalStart"} trigger="click" speaker={renderMenu}>
-                                    <div>
-                                        <Button>Add</Button>
-                                        <IconButton icon={<AddOutlineIcon/>}/>
-                                    </div>
-                                </Whisper>
-                            </ButtonGroup>
-                        </FlexboxGrid.Item>
-                        <FlexboxGrid.Item colspan={3}> <IconButton icon={<AddOutlineIcon/>}>Add</IconButton>
-                        </FlexboxGrid.Item>
+                        {/*<FlexboxGrid.Item colspan={6}>*/}
+                        {/*    <ButtonGroup>*/}
+                        {/*        <Whisper placement={"autoVerticalStart"} trigger="click" speaker={renderMenu}>*/}
+                        {/*            <div>*/}
+                        {/*                <Button>Add Filter</Button>*/}
+                        {/*                <IconButton icon={<AddOutlineIcon/>}/>*/}
+                        {/*            </div>*/}
+                        {/*        </Whisper>*/}
+                        {/*    </ButtonGroup>*/}
+                        {/*</FlexboxGrid.Item>*/}
                     </FlexboxGrid>
                     <FlexboxGrid>
                         <FlexboxGrid.Item>
-                            {[...columnFilterKeys].map((column, key) => {
+                            {[...activeFilteredColumns].map((column, key) => {
 
                                 // @ts-ignore
                                 // @ts-ignore
@@ -411,17 +353,26 @@ export const TableComponent = () => {
                         next
                         first
                         last
-                        ellipsis
-                        boundaryLinks
-                        maxButtons={5}
-                        size="xs"
+                        size="md"
                         layout={['total', '-', 'limit', '|', 'pager', 'skip']}
                         total={teams.length}
                         limitOptions={[10, 20, 30]}
-                        limit={limit}
+                        limit={paginateSearch.pageLimit}
                         activePage={paginateSearch.currentPage}
-                        onChangePage={setPage}
-                        onChangeLimit={setLimit}
+                        onChangePage={(page) => {
+                            setPaginateSearch({
+                                ...paginateSearch,
+                                currentPage: page,
+                            })
+                        }
+                        }
+                        onChangeLimit={(limit) => {
+                            setPaginateSearch({
+                                ...paginateSearch,
+                                pageLimit: limit,
+                            })
+                        }
+                        }
                     />
                 </div>
             </div>
@@ -433,14 +384,7 @@ export const TableComponent = () => {
 
 export interface Ipaginate {
     currentPage: number,
-    pageLimit
-        :
-        number,
-    newSearch: { [key: string]: string },
-
-    search: [{
-        value?: string | number,
-        label?: string
-    }] | any
+    pageLimit: number,
+    search: { [key: string]: string },
 
 }
