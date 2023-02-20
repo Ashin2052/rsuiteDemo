@@ -6,15 +6,19 @@ import {
     IconButton,
     ButtonGroup,
     Whisper,
-    SelectPicker, Popover, Dropdown, FlexboxGrid, CheckPicker
+    SelectPicker, Popover, Dropdown, FlexboxGrid, CheckPicker, InputPicker
 } from 'rsuite';
-import {useEffect, useState} from "react";
+import React, {useEffect, useState} from "react";
 import {teams} from "./team";
 import {Input, InputGroup, Grid, Row} from 'rsuite';
 import SearchIcon from '@rsuite/icons/Search';
 import Progress from "rsuite/Progress";
 import FlexboxGridItem from "rsuite/cjs/FlexboxGrid/FlexboxGridItem";
 import {defaultColumns} from "./column";
+import ReactDOM from "react-dom/client";
+import {createPortal} from "react-dom";
+import Overlay from "rsuite/Overlay";
+import PlusIcon from '@rsuite/icons/Plus';
 
 const {Column, HeaderCell, Cell} = Table;
 
@@ -132,32 +136,67 @@ export const TableComponent = () => {
     };
 
     const addColumnFilter = (data: any) => {
+        console.log(data, 'triggred');
         setActiveFilteredColumns(data);
     };
-
-    const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
-        const addColumnFilter = (data: any) => {
-            setActiveFilteredColumns(data);
-        };
-        return (
-            <Popover ref={ref} className={className}>
-                <div>
+    const handleSelect = (val: any) => {
+        console.log(val)
+    }
+    // @ts-ignore
+    const renderMenu = (props, ref) => {
+        // @ts-ignore
+        // @ts-ignore
+        return (<>
+            <div>
+                <Popover ref={ref}
+                         className={props.className}
+                         style={{left: props.left, top: props.top}} full>
                     <TagPicker
-                        data={columnFilter}
-                        labelKey="label"
+                        size={"lg"}
                         open={true}
-                        valueKey="key"
+                        style={{width: 300}}
+                        value={[...activeFilteredColumns]}
                         onChange={addColumnFilter}
-                        cleanable={true}
-                        style={{width: 240}}
-                        menuStyle={{width: 240}}
+                        data={columnFilter}
+                        block
                     />
-                </div>
-            </Popover>
-        )
+                </Popover>
+            </div>
+        </>
+        );
+
+        // @ts-ignore
+        let elementById: HTMLElement = document.getElementById("overlay") || <div></div>;
+        return createPortal(
+            <div>
+                <Popover ref={ref}
+                         className={props.className}
+                         style={{left: props.left, top: props.top}} full>
+                    <CheckPicker
+                        data={defaultColumns}
+                        labelKey="label"
+                        valueKey="key"
+                        value={activeColumns}
+                        onClean={() => {
+                            // [Object.keys(paginateSearch.search)].forEach((column) => {
+                            //     onCLoseFilter(column);
+                            // })
+                        }}
+                        onChange={setActiveColumns}
+                        cleanable={false}
+                    />
+                </Popover>
+            </div>
+            ,
+            elementById)
     }
 
-    const getDynamicSearchDataForColumnFilters: any = (key: 'string', page: any) => {
+
+    const getDynamicSearchDataForColumnFilters: any = (
+        key: 'string', page
+            :
+            any
+    ) => {
         const searchData: any[] = [];
         [...teams].forEach((row: any) => {
             if (!searchData.some(val => val.value === row[key]?.fullname || val.value === row[key])) {
@@ -170,7 +209,7 @@ export const TableComponent = () => {
         return searchData;
     }
 
-    // @ts-ignore
+// @ts-ignore
     return (
         <div style={{
             width: '100%',
@@ -180,6 +219,7 @@ export const TableComponent = () => {
             justifyContent: 'center',
             alignItems: 'center'
         }}>
+
             <div style={{width: '85%'}}>
 
                 {/*1st dynamic column section*/}
@@ -207,7 +247,7 @@ export const TableComponent = () => {
                 {/*2nd section*/}
                 <div style={{padding: '10'}}>
                     {/* eslint-disable-next-line react/jsx-no-undef */}
-                    <FlexboxGrid justify="end">
+                    <FlexboxGrid justify="space-around" >
                         <FlexboxGrid.Item colspan={6}>
                             <CustomInputGroup
                                 size="12"
@@ -231,34 +271,24 @@ export const TableComponent = () => {
                                        }
                             />
                         </FlexboxGrid.Item>
-                        <FlexboxGridItem>
-                            <CheckPicker
-                                data={columnFilter}
-                                labelKey="label"
-                                valueKey="key"
-                                placeholder={'Column Filter'}
-                                onChange={addColumnFilter}
-                                onClean={() => {
-                                    activeFilteredColumns.forEach((column: string) => {
-                                        onCLoseFilter(column);
-                                    })
-                                }
-                                }
-                                cleanable={true}
-                                style={{width: 350}}
-                            />
-                        </FlexboxGridItem>
 
-                        {/*<FlexboxGrid.Item colspan={6}>*/}
-                        {/*    <ButtonGroup>*/}
-                        {/*        <Whisper placement={"autoVerticalStart"} trigger="click" speaker={renderMenu}>*/}
-                        {/*            <div>*/}
-                        {/*                <Button>Add Filter</Button>*/}
-                        {/*                <IconButton icon={<AddOutlineIcon/>}/>*/}
-                        {/*            </div>*/}
-                        {/*        </Whisper>*/}
-                        {/*    </ButtonGroup>*/}
-                        {/*</FlexboxGrid.Item>*/}
+
+                        <FlexboxGrid.Item colspan={3}>
+                            <ButtonGroup>
+                                <Whisper trigger="click"
+                                         placement={"bottom"}
+                                         speaker={renderMenu}
+                                         rootClose={false}
+                                >
+                                    <div>
+                                        <IconButton appearance="primary" icon={<PlusIcon />} placement="left" >
+                                            Add Column Filter
+                                        </IconButton>
+                                        {/*<IconButton icon={<AddOutlineIcon/>}/>*/}
+                                    </div>
+                                </Whisper>
+                            </ButtonGroup>
+                        </FlexboxGrid.Item>
                     </FlexboxGrid>
                     <FlexboxGrid>
                         <FlexboxGrid.Item>
@@ -302,6 +332,7 @@ export const TableComponent = () => {
                                         key={key}
                                         align={'left'}
                                 >
+                                    {/* eslint-disable-next-line react/jsx-no-undef */}
                                     <CustomHeaderCell>{label}</CustomHeaderCell>
                                     {/*<CustomCell dataKey={key}/>*/}
                                     <Cell>
@@ -383,8 +414,7 @@ export const TableComponent = () => {
             </div>
         </div>
     )
-        ;
-};
+}
 
 
 export interface Ipaginate {
