@@ -6,7 +6,7 @@ import {
     IconButton,
     ButtonGroup,
     Whisper,
-    SelectPicker, Popover, Dropdown, FlexboxGrid, CheckPicker, InputPicker
+    SelectPicker, Popover, Dropdown, FlexboxGrid, CheckPicker, InputPicker, CheckboxGroup, Checkbox
 } from 'rsuite';
 import React, {useEffect, useState} from "react";
 import {teams} from "./team";
@@ -135,67 +135,49 @@ export const TableComponent = () => {
         })
     };
 
-    const addColumnFilter = (data: any) => {
-        console.log(data, 'triggred');
-        setActiveFilteredColumns(data);
+    const addColumnFilter = (value: any) => {
+        const filters = [...activeFilteredColumns];
+        if (!activeFilteredColumns.some(col => col.key === value.key)) {
+            filters.push(value);
+        }
+        setActiveFilteredColumns(filters);
     };
     const handleSelect = (val: any) => {
         console.log(val)
     }
     // @ts-ignore
-    const renderMenu = (props, ref) => {
-        // @ts-ignore
-        // @ts-ignore
-        return (<>
-            <div>
-                <Popover ref={ref}
-                         className={props.className}
-                         style={{left: props.left, top: props.top}} full>
-                    <TagPicker
-                        size={"lg"}
-                        open={true}
-                        style={{width: 300}}
-                        value={[...activeFilteredColumns]}
-                        onChange={addColumnFilter}
-                        data={columnFilter}
-                        block
-                    />
-                </Popover>
-            </div>
-        </>
+    const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
+        return (
+            <Popover ref={ref} className={className} style={{left, top}} full>
+                <Dropdown.Menu onSelect={addColumnFilter}>
+                    {[...columnFilter].map((value, key) => {
+                        return <Dropdown.Item
+                            key={key}
+                            eventKey={value}>{value.label}</Dropdown.Item>
+                    })}
+                </Dropdown.Menu>
+            </Popover>
         );
+    }
 
-        // @ts-ignore
-        let elementById: HTMLElement = document.getElementById("overlay") || <div></div>;
-        return createPortal(
-            <div>
-                <Popover ref={ref}
-                         className={props.className}
-                         style={{left: props.left, top: props.top}} full>
-                    <CheckPicker
-                        data={defaultColumns}
-                        labelKey="label"
-                        valueKey="key"
-                        value={activeColumns}
-                        onClean={() => {
-                            // [Object.keys(paginateSearch.search)].forEach((column) => {
-                            //     onCLoseFilter(column);
-                            // })
-                        }}
-                        onChange={setActiveColumns}
-                        cleanable={false}
-                    />
-                </Popover>
-            </div>
-            ,
-            elementById)
+    const renderColumnCheckPicker = ({onClose, left, top, className}: any, ref: any) => {
+        return (
+            <Popover ref={ref} className={className} style={{left, top}} full>
+                <CheckboxGroup onChange={columnCheckboxSelect}
+                               value={activeColumns}>
+                    {[...defaultColumns].map((col, key) => {
+                        return <Checkbox
+                            key={key}
+                            value={col.key}>{col.label}</Checkbox>
+                    })}
+                </CheckboxGroup>
+            </Popover>
+        );
     }
 
 
     const getDynamicSearchDataForColumnFilters: any = (
-        key: 'string', page
-            :
-            any
+        key: 'string'
     ) => {
         const searchData: any[] = [];
         [...teams].forEach((row: any) => {
@@ -205,10 +187,12 @@ export const TableComponent = () => {
                     value: row[key]?.fullname || row[key],
                 })
             }
-        })
+        });
         return searchData;
     }
-
+    const columnCheckboxSelect = (val: any) => {
+        setActiveColumns(val)
+    }
 // @ts-ignore
     return (
         <div style={{
@@ -225,29 +209,52 @@ export const TableComponent = () => {
                 {/*1st dynamic column section*/}
                 <FlexboxGrid style={{padding: '10px',}} justify={"space-between"}>
                     <FlexboxGridItem colspan={6}>
-                        Projects
+                        <div className="table-title__header ">
+                            <div className="table-title__header--top-row d-flex align-items-center">
+                                <div className="table-title__header--title mr-6x"><h2 className="title">Projects</h2>
+                                    <span className="total-showing d-block">Showing 40 of 47 Projects</span></div>
+                            </div>
+                        </div>
                     </FlexboxGridItem>
                     <FlexboxGridItem colspan={6}>
-                        <CheckPicker
-                            data={defaultColumns}
-                            labelKey="label"
-                            valueKey="key"
-                            value={activeColumns}
-                            onClean={() => {
-                                // [Object.keys(paginateSearch.search)].forEach((column) => {
-                                //     onCLoseFilter(column);
-                                // })
-                            }}
-                            onChange={setActiveColumns}
-                            cleanable={false}
-                        />
+
+                        <Whisper trigger="click"
+                                 placement={"bottom"}
+                                 speaker={renderColumnCheckPicker}
+                                 style={{width: 'fit-content'}}
+                        >
+                            <div className="d-flex align-items-center" style={{}}>
+                                <div className="tooltip mr-4x" data-tooltipped="" aria-describedby="tippy-tooltip-1"
+                                     style={{display: 'inline'}}>
+                                    <button type="button" className="add-columns-button">
+                                        <svg stroke="currentColor" fill="none" stroke-width="2" viewBox="0 0 24 24"
+                                             stroke-linecap="round" stroke-linejoin="round" height="1em" width="1em"
+                                             xmlns="http://www.w3.org/2000/svg">
+                                            <path
+                                                d="M12 3h7a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2h-7m0-18H5a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h7m0-18v18"></path>
+                                        </svg>
+                                    </button>
+                                </div>
+                            </div>
+
+                        </Whisper>
+
+
+                        {/*<CheckPicker*/}
+                        {/*    data={defaultColumns}*/}
+                        {/*    labelKey="label"*/}
+                        {/*    valueKey="key"*/}
+                        {/*    value={activeColumns}*/}
+                        {/*    onChange={setActiveColumns}*/}
+                        {/*    cleanable={false}*/}
+                        {/*/>*/}
                     </FlexboxGridItem>
                 </FlexboxGrid>
 
                 {/*2nd section*/}
                 <div style={{padding: '10'}}>
                     {/* eslint-disable-next-line react/jsx-no-undef */}
-                    <FlexboxGrid justify="space-around" >
+                    <FlexboxGrid justify="space-around">
                         <FlexboxGrid.Item colspan={6}>
                             <CustomInputGroup
                                 size="12"
@@ -278,14 +285,10 @@ export const TableComponent = () => {
                                 <Whisper trigger="click"
                                          placement={"bottom"}
                                          speaker={renderMenu}
-                                         rootClose={false}
                                 >
-                                    <div>
-                                        <IconButton appearance="primary" icon={<PlusIcon />} placement="left" >
-                                            Add Column Filter
-                                        </IconButton>
-                                        {/*<IconButton icon={<AddOutlineIcon/>}/>*/}
-                                    </div>
+                                    <IconButton appearance="primary" icon={<PlusIcon/>} placement="left">
+                                        Add Column Filter
+                                    </IconButton>
                                 </Whisper>
                             </ButtonGroup>
                         </FlexboxGrid.Item>
@@ -293,22 +296,20 @@ export const TableComponent = () => {
                     <FlexboxGrid>
                         <FlexboxGrid.Item>
                             {[...activeFilteredColumns].map((column, key) => {
-
-                                // @ts-ignore
                                 // @ts-ignore
                                 return (
                                     <SelectPicker
                                         id={column}
                                         style={{width: 224, padding: '16px'}}
-                                        placeholder={columns.find(col => col.key === column)?.label}
+                                        placeholder={column.label}
                                         onSelect={(searchKeyword) => {
-                                            onSearch(searchKeyword, column)
+                                            onSearch(searchKeyword, column.key)
                                         }}
                                         onClean={() => {
                                             onCLoseFilter(column);
                                         }
                                         }
-                                        data={getDynamicSearchDataForColumnFilters(column)}
+                                        data={getDynamicSearchDataForColumnFilters(column.key)}
                                         virtualized
                                     />
                                 )
