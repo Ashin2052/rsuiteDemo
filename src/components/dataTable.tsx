@@ -39,7 +39,9 @@ export const TableComponent = () => {
     const [compact, setCompact] = useState(true);
     const [noData, setNoData] = useState(false);
     const [activeColumns, setActiveColumns] = useState(defaultColumns.map(column => column.key));
+    const [sortColumn, setSortColumn] = useState('');
     const [data, setData] = useState<any>([]);
+    const [sortType, setSortType] = useState();
     const columns = defaultColumns.filter(column => activeColumns.some(key => key === column.key));
     const CustomHeaderCell = compact ? CompactHeaderCell : HeaderCell;
     const [paginateSearch, setPaginateSearch] = useState<Ipaginate>({
@@ -126,6 +128,39 @@ export const TableComponent = () => {
         });
     }
 
+    const getData: any = () => {
+        if (sortColumn && sortType) {
+            return data.sort((a: { [x: string]: any; }, b: { [x: string]: any; }) => {
+                let x = a[sortColumn];
+                let y = b[sortColumn];
+                if (typeof x === 'string') {
+                    // @ts-ignore
+                    x = x.charCodeAt();
+                }
+                if (typeof y === 'string') {
+                    // @ts-ignore
+                    y = y.charCodeAt();
+                }
+                if (sortType === 'asc') {
+                    return x - y;
+                } else {
+                    return y - x;
+                }
+            });
+        }
+        return data;
+    };
+
+    const handleSortColumn = (sortColumn: string, sortType: any | undefined): any => {
+        setLoading(true);
+        setTimeout(() => {
+            setLoading(false);
+            setSortColumn(sortColumn);
+            setSortType(sortType);
+        }, 500);
+    };
+
+
     const onCLoseFilter = (column: string) => {
         const searchObject = {...paginateSearch.search}
         delete searchObject[column];
@@ -142,9 +177,7 @@ export const TableComponent = () => {
         }
         setActiveFilteredColumns(filters);
     };
-    const handleSelect = (val: any) => {
-        console.log(val)
-    }
+
     // @ts-ignore
     const renderMenu = ({onClose, left, top, className}: any, ref: any) => {
         return (
@@ -197,17 +230,22 @@ export const TableComponent = () => {
     return (
         <div style={{
             width: '100%',
-            paddingTop: '30px',
             display: 'flex',
             height: '100%',
             justifyContent: 'center',
-            alignItems: 'center'
+            alignItems: 'center',
+            paddingRight: '16px',
+            paddingLeft: '16px',
+            marginLeft: 'auto',
+            marginRight: 'auto',
         }}>
 
-            <div style={{width: '85%'}}>
+            <div style={{
+                width: '85%', margin: '24px'
+            }}>
 
                 {/*1st dynamic column section*/}
-                <FlexboxGrid style={{padding: '10px',}} justify={"space-between"}>
+                <FlexboxGrid style={{padding: '10px'}} justify={"space-between"} className={"table-header"}>
                     <FlexboxGridItem colspan={6}>
                         <div className="table-title__header ">
                             <div className="table-title__header--top-row d-flex align-items-center">
@@ -216,7 +254,7 @@ export const TableComponent = () => {
                             </div>
                         </div>
                     </FlexboxGridItem>
-                    <FlexboxGridItem colspan={6}>
+                    <FlexboxGridItem colspan={1}  >
 
                         <Whisper trigger="click"
                                  placement={"bottom"}
@@ -238,24 +276,14 @@ export const TableComponent = () => {
                             </div>
 
                         </Whisper>
-
-
-                        {/*<CheckPicker*/}
-                        {/*    data={defaultColumns}*/}
-                        {/*    labelKey="label"*/}
-                        {/*    valueKey="key"*/}
-                        {/*    value={activeColumns}*/}
-                        {/*    onChange={setActiveColumns}*/}
-                        {/*    cleanable={false}*/}
-                        {/*/>*/}
                     </FlexboxGridItem>
                 </FlexboxGrid>
 
                 {/*2nd section*/}
-                <div style={{padding: '10'}}>
+                <div style={{padding: '10px',marginTop:'4px'}} className={"bg-white"}>
                     {/* eslint-disable-next-line react/jsx-no-undef */}
-                    <FlexboxGrid justify="space-around">
-                        <FlexboxGrid.Item colspan={6}>
+                    <FlexboxGrid justify="end">
+                        <FlexboxGrid.Item colspan={4} className="pdh-14">
                             <CustomInputGroup
                                 size="12"
                                 placeholder="Search By Name"
@@ -265,7 +293,7 @@ export const TableComponent = () => {
                                 }/>
                         </FlexboxGrid.Item>
 
-                        <FlexboxGrid.Item colspan={6}>
+                        <FlexboxGrid.Item colspan={4} className="pdh-14">
                             <TagPicker data={teamStatusOption}
                                        placeholder="Status"
                                        style={{width: 300}}
@@ -280,7 +308,7 @@ export const TableComponent = () => {
                         </FlexboxGrid.Item>
 
 
-                        <FlexboxGrid.Item colspan={3}>
+                        <FlexboxGrid.Item colspan={3} className="pdh-14">
                             <ButtonGroup>
                                 <Whisper trigger="click"
                                          placement={"bottom"}
@@ -319,12 +347,18 @@ export const TableComponent = () => {
                 </div>
 
                 {/*table section*/}
-                <div style={{padding: '10px'}}>
+                <div style={{padding: '10px',marginTop:'4px'}} className={"bg-white"}>
                     <Table
                         loading={loading}
                         height={600}
                         hover={true}
-                        data={noData ? [] : data}
+                        sortColumn={sortColumn}
+                        sortType={sortType}
+                        onSortColumn={(col, sortType) => {
+                            handleSortColumn(col, sortType);
+                        }
+                        }
+                        data={getData}
                     >
                         {columns.map((column) => {
                             const {key, label, ...rest} = column;

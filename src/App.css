@@ -1,2 +1,40 @@
 @import "css/vendor.overide.css";
 
+.pdh-14 {
+    padding: 0px 14px;
+}
+
+.bg-white {
+    background: white;
+}
+
+.table-header {
+    background-color: #fff;
+    border-radius: 4px 4px 0 0;
+    padding: 10px 16px;
+}
+
+.table-title__header .title {
+    font-weight: 700;
+    font-size: 20px;
+    line-height: 20px !important;
+}
+
+.table-title__header .total-showing {
+    font-size: .625rem;
+    color: #737373;
+}
+
+.add-columns-button {
+    background-color: #fff;
+    border-radius: 2px;
+    border: 1px solid #b2b2b2;
+    color: #999;
+    cursor: pointer;
+    height: 32px;
+    margin: 5px 0;
+    width: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
