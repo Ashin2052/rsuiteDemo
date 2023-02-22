@@ -15,11 +15,8 @@ import SearchIcon from '@rsuite/icons/Search';
 import Progress from "rsuite/Progress";
 import FlexboxGridItem from "rsuite/cjs/FlexboxGrid/FlexboxGridItem";
 import {defaultColumns} from "./column";
-import ReactDOM from "react-dom/client";
-import {createPortal} from "react-dom";
-import Overlay from "rsuite/Overlay";
 import PlusIcon from '@rsuite/icons/Plus';
-
+import AddOutlineIcon from '@rsuite/icons/AddOutline';
 const {Column, HeaderCell, Cell} = Table;
 
 const CompactHeaderCell = (props: any) => <HeaderCell {...props} style={{padding: 4}}/>;
@@ -228,17 +225,7 @@ export const TableComponent = () => {
     }
 // @ts-ignore
     return (
-        <div style={{
-            width: '100%',
-            display: 'flex',
-            height: '100%',
-            justifyContent: 'center',
-            alignItems: 'center',
-            paddingRight: '16px',
-            paddingLeft: '16px',
-            marginLeft: 'auto',
-            marginRight: 'auto',
-        }}>
+        <div className={'table-container'}>
 
             <div style={{
                 width: '85%', margin: '24px'
@@ -309,16 +296,20 @@ export const TableComponent = () => {
 
 
                         <FlexboxGrid.Item colspan={3} className="pdh-14">
-                            <ButtonGroup>
                                 <Whisper trigger="click"
                                          placement={"bottom"}
                                          speaker={renderMenu}
                                 >
-                                    <IconButton appearance="primary" icon={<PlusIcon/>} placement="left">
-                                        Add Column Filter
-                                    </IconButton>
+                                    <ButtonGroup>
+                                        <Button  appearance="subtle" className={'more-filter'}>
+                                            <span style={{paddingRight:'6px'}}>
+                                                <AddOutlineIcon/>
+                                            </span>
+                                            More Filter
+                                        </Button>
+                                    </ButtonGroup>
+
                                 </Whisper>
-                            </ButtonGroup>
                         </FlexboxGrid.Item>
                     </FlexboxGrid>
                     <FlexboxGrid>
