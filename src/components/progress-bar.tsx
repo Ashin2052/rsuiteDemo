@@ -6,7 +6,7 @@ const style = {
     display: 'inline-block',
     marginRight: 10,
 };
-export const ProgressBar = () => {
+export const ProgressBar = ({data,value}:any) => {
     return (<div>
         <Progress.Line />
         <Progress.Line percent={30} strokeColor="#ffc107" />

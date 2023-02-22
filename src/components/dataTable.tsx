@@ -74,7 +74,6 @@ export const TableComponent = () => {
     const [columnFilter, setColumnFilter] = useState<any[]>([]);
     const [activeFilteredColumns, setActiveFilteredColumns] = useState<any[]>([]);
 
-
     useEffect(() => {
         const temp: any[] = [];
         activeColumns.forEach((data) => {
@@ -159,9 +158,10 @@ export const TableComponent = () => {
     const setPageLimit = (event: any) => {
         setPaginateSearch({
             ...paginateSearch,
-            pageLimit: event.target.value
-        })
-    }
+            currentPage:1,
+            pageLimit: event.target.value,
+        });
+    };
 
     const getData: any = () => {
         if (sortColumn && sortType) {
@@ -510,19 +510,49 @@ export const TableComponent = () => {
                     <div className="table__pagination">
                         <div className="lf-table__pagination">
                             <div className="lf-table__pagination--left">
-                                <Button className="lf-table__pagination-btn lf-table__pagination-btn--active">
+                                <Button
+                                    className="lf-table__pagination-btn lf-table__pagination-btn--active"
+                                    onClick={() => {
+                                        setPaginateSearch({
+                                            ...paginateSearch,
+                                            currentPage: 1,
+                                        });
+                                    }}
+                                >
                                     First
                                 </Button>
-                                <Button className="lf-table__pagination-btn lf-table__pagination-btn--disabled">
+                                <Button className="lf-table__pagination-btn lf-table__pagination-btn--disabled"
+                                        onClick={() => {
+                                            setPaginateSearch({
+                                                ...paginateSearch,
+                                                currentPage: paginateSearch.currentPage - 1,
+                                            });
+                                        }}
+                                >
                                     Prev
                                 </Button>
-                                <Button className="lf-table__pagination-btn">Next</Button>
-                                <Button type="button" className="lf-table__pagination-btn">
+                                <Button className="lf-table__pagination-btn" onClick={() => {
+                                    setPaginateSearch({
+                                        ...paginateSearch,
+                                        currentPage: paginateSearch.currentPage + 1,
+                                    });
+                                }}>Next</Button>
+                                <Button type="button" className="lf-table__pagination-btn"
+                                        onClick={() => {
+                                            setPaginateSearch({
+                                                ...paginateSearch,
+                                                currentPage: Math.ceil(teams.length / paginateSearch.pageLimit),
+                                            });
+                                        }}
+                                >
                                     Last
                                 </Button>
                             </div>
                             <div className="lf-table__pagination--right">
-                                <select className="lf-table__pagination-dropdown" onChange={setPageLimit}>
+                                <select
+                                    className="lf-table__pagination-dropdown"
+                                    onChange={setPageLimit}
+                                >
                                     {[10, 20, 30, 40].map((num, key) => {
                                         return (
                                             <option
