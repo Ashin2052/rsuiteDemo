@@ -1,0 +1,74 @@
+.lf-table__pagination {
+    display: flex;
+    justify-content: flex-start;
+    padding: 1.25rem .75rem;
+    align-items: center
+}
+
+.lf-table__pagination-btn {
+    font-size: .875rem;
+    outline: none;
+    cursor: pointer;
+    color: #999;
+    padding: .5rem 1rem;
+    border-radius: 2px;
+    background: #ffffff;
+    border: 1px solid #d2d2d2;
+    margin-right: .5rem;
+    line-height: normal;
+    font-weight: 600
+}
+
+.lf-table__pagination-btn:hover {
+    background-color: #999;
+    border: 1px solid #999999;
+    color: #fff
+}
+
+.lf-table__pagination-btn--active {
+    background: #29b6f6;
+    color: #fff;
+    border-color: #29b6f6;
+    font-weight: 700
+}
+
+.lf-table__pagination-btn--active:hover {
+    background-color: #2196f3;
+    border: 1px solid #2196f3
+}
+
+.lf-table__pagination-btn--disabled {
+    background: #d2d2d2;
+    color: #fff;
+    border-color: #d2d2d2;
+    cursor: not-allowed
+}
+
+.lf-table__pagination-btn--disabled:hover {
+    border-color: #d2d2d2;
+    background: #d2d2d2
+}
+
+.lf-table__pagination-dropdown {
+    font-size: .875rem;
+    outline: none;
+    cursor: pointer;
+    color: #999;
+    padding: .5rem;
+    border-radius: 2px;
+    background: #ffffff;
+    border: 1px solid #d2d2d2;
+    box-sizing: border-box;
+    height: 35px;
+    font-weight: 600
+}
+
+.lf-table__pagination-dropdown-option {
+    padding: .5rem 1rem
+}
+
+.lf-table__pagination-status {
+    margin-left: .5rem;
+    font-size: .875rem;
+    color: #737373
+}
